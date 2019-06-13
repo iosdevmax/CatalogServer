@@ -3,8 +3,8 @@ var router = express.Router();
 var bodyParser = require('body-parser');
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
-var Item = require('../item/Item');
-var uuid = require('uuid');
+var Item = require('../Item/Item');
+let uuid = require('uuid');
 var errorHandler = require('../ErrorHandler');
 
 /*
@@ -13,10 +13,10 @@ var errorHandler = require('../ErrorHandler');
     -------------------------------------
 */
 
-router.post('/addProduct', function (req, res) {
+router.post('/item', function (req, res) {
 
     Item.create({
-            id: uuid.v1(),
+            uuid: uuid.v1(),
             name: req.body.name,
             price: req.body.price,
             description: req.body.description
@@ -35,13 +35,31 @@ router.post('/addProduct', function (req, res) {
     -------------------------------------
 */
 
-router.get('/getProducts', function (req, res) {
+router.get('/item', function (req, res) {
 
-    Item.find({}, function (error, items) {
+    let itemsUUIDs = req.body;
+    var query = {};
+    console.log(itemsUUIDs.length);
+    if (isEmpty(itemsUUIDs)) {
+
+    } else {
+        query = {"itemUUID" : {"$in" : ["b85e1ef0-6935-11e9-9f0d-3901b0f61681"] }};
+    }
+
+    Item.find(query, function (error, items) {
         if (error) return errorHandler.serverError(res);
         res.status(200).send(items);
     });
+
 });
+
+function isEmpty(obj) {
+    for(var key in obj) {
+        if(obj.hasOwnProperty(key))
+            return false;
+    }
+    return true;
+}
 
 /*
     ----------------------------------------
@@ -49,13 +67,13 @@ router.get('/getProducts', function (req, res) {
     ----------------------------------------
 */
 
-router.get('/getProduct/:id', function (req, res) {
+router.get('/item/:id', function (req, res) {
 
     let id = req.params.id.toString();
 
-    Item.find({id: id}, function (error, item) {
+    Item.findOne({uuid: id}, function (error, item) {
         if (error) return errorHandler.serverError(res);
-        if (item.length === 0) return errorHandler.itemDoesNotExist(res);
+        if (!item) return errorHandler.itemDoesNotExist(res);
         res.status(200).send(item);
     });
 });
